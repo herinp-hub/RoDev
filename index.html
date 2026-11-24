@@ -7,7 +7,7 @@
 <aside class="side"><div class="logo"><div class="mark">R</div><span>RODEV</span></div><div class="cap">DISCOVER</div><button class="nav active" data-page="home"><span class="ni">⌂</span><span>Home</span></button><button class="nav" data-page="games"><span class="ni">▣</span><span>Games</span></button><button class="nav" data-page="avatar"><span class="ni">◉</span><span>Avatar</span></button><div class="cap">CREATE</div><button class="nav" data-page="studio"><span class="ni">▧</span><span>RODEV Studio</span></button><button class="nav" data-page="creations"><span class="ni">▤</span><span>My Creations</span></button><div class="cap">COMMUNITY</div><button class="nav" data-page="market"><span class="ni">◇</span><span>Marketplace</span></button><button class="nav" data-page="profile"><span class="ni">◎</span><span>Profile</span></button><button class="nav" data-page="friends"><span class="ni">♧</span><span>Friends</span></button><button class="nav" data-page="messages"><span class="ni">✉</span><span>Messages</span></button><div class="sidefoot"><div class="userpic">H</div><div><b>Builder_Herin</b><small>RODEV member</small></div></div></aside>
 <main class="main"><header class="top"><div class="search"><span>⌕</span><input id="search" placeholder="Search games, creators, and more..."></div><div class="topright"><button class="soundbtn" id="soundButton" title="Sound settings" aria-label="Sound settings">♫</button><button class="soft" id="notify">♧</button><button class="primary" id="createBtn">＋ Create</button></div></header><div class="soundpop" id="soundPop"><div class="soundrow"><span>Sound settings</span><button class="soft" id="closeSound" aria-label="Close sound settings">✕</button></div><label><input type="checkbox" id="soundEnabled" checked style="width:auto;vertical-align:middle"> Interface sounds</label><label for="soundVolume">Volume</label><input type="range" id="soundVolume" min="0" max="100" value="55"><div class="mutednote">Sounds start after your first tap or click. Your setting is saved on this device.</div><button class="soft" id="testSound" style="width:100%;margin-top:10px">▶ Test sound</button></div><div class="content">
 <section class="page active" id="p-home"><div class="welcome"><div class="eyebrow">YOUR NEXT ADVENTURE STARTS HERE</div><h1>Welcome to RODEV.</h1><p>Discover experiences, meet creators, and build something awesome.</p></div><div class="hero"><div><div class="eyebrow">THE CREATOR PLATFORM</div><h2>Play anything.<br>Create everything.</h2><p>Explore community-made worlds or open RODEV Studio and build your own.</p><button id="heroCreate">Open RODEV Studio →</button></div><div class="heroart"><div class="cube c1"></div><div class="cube c2"></div><div class="cube c3"></div></div></div><div class="head"><h2>Discover experiences</h2><button id="seeAll">See all →</button></div><div class="chips"><button class="chip active">For you</button><button class="chip">Popular</button><button class="chip">Adventure</button><button class="chip">Obby</button><button class="chip">Simulation</button></div><div class="games" id="homeGames"></div><div class="twocol"><div class="panel"><h3>Start creating</h3><div class="quick"><button data-go="studio"><i>🧱</i><b>Build a world</b><small>Start with a baseplate</small></button><button data-go="studio"><i>🎮</i><b>Make a game</b><small>Build and test an idea</small></button><button data-go="market"><i>🧰</i><b>Find assets</b><small>Explore creator resources</small></button></div></div><div class="panel"><h3>Creator activity</h3><p style="color:var(--muted);line-height:1.6">Your creator journey starts here. Open Studio to build your first world.</p></div></div></section>
-<section class="page" id="p-games"><div class="sub"><div class="eyebrow">THE COMMUNITY</div><h1>Games & experiences</h1><p>Sample experiences for the RODEV discovery layout.</p></div><div class="games" id="allGames"></div></section>
+<section class="page" id="p-games"><div class="sub"><div class="eyebrow">THE COMMUNITY</div><h1>Games & experiences</h1><p>Sample experiences for the RODEV discovery layout.</p></div><div class="games" id="allGames"></div><div class="head"><h2>Published by creators</h2></div><div class="games" id="rodevPublishedGames"></div></section>
 <section class="page" id="p-studio"><div class="sub"><div class="eyebrow">CREATOR TOOLS</div><h1>RODEV Studio</h1><p>Build a 3D world by placing parts, editing properties, and testing your scene.</p></div><div class="playrow"><button id="play">▶ Play test</button><small id="playstate">Edit mode · Drag to orbit · Scroll to zoom</small></div><div class="editor"><div class="edithead"><strong>▧ &nbsp; My First Experience / Workspace</strong><div class="tools"><button id="save">Save draft</button><button id="load">Load draft</button><button class="primary" id="publish">Publish</button></div></div><div class="editbody"><aside class="toolpanel"><h4>INSERT OBJECT</h4><button class="tool" id="block">🧱 Add block</button><button class="tool" id="sphere">⚪ Add sphere</button><button class="tool" id="ramp">📐 Add ramp</button><button class="tool" id="tree">🌳 Add tree</button><h4 style="margin-top:20px">TRANSFORM</h4><button class="tool" id="rotate">⟳ Rotate 45°</button><button class="tool" id="delete">⌫ Delete selected</button></aside><div id="scene"><canvas id="view"></canvas><div class="hint">Drag to orbit · Pinch or scroll to zoom · Tap a part to select</div></div><aside class="toolpanel right"><h4>PROPERTIES</h4><div class="prop">Object name</div><input class="propinput" id="objname" value="Baseplate" readonly><div class="prop">Color</div><input class="propinput" id="color" type="color" value="#70b77e"><div class="prop">Position (X / Y / Z)</div><div class="xyz"><input id="x" type="number" step=".5" value="0"><input id="y" type="number" step=".5" value="0"><input id="z" type="number" step=".5" value="0"></div><div class="prop" style="margin-top:18px">Workspace</div><div id="count" style="font-size:12px;color:var(--muted)">1 object</div></aside></div></div></section>
 <section class="page" id="p-creations"><div class="sub"><div class="eyebrow">YOUR WORK</div><h1>My Creations</h1><p>Your saved projects will appear here.</p></div><div class="empty"><div style="font-size:42px">🧱</div><h3 style="color:var(--ink)">Your creator space is ready</h3><p>Start building your first world in RODEV Studio.</p><button class="primary" id="newExperience">＋ Create experience</button></div></section>
 <section class="page" id="p-avatar"><div class="sub"><div class="eyebrow">MAKE IT YOURS</div><h1>Avatar</h1><p>Customize your identity in RODEV.</p></div><div class="panel" style="max-width:600px;display:flex;gap:22px;align-items:center"><div style="height:180px;width:160px;background:#edf2ff;border-radius:14px;display:grid;place-items:center;font-size:85px">🧍</div><div><h2>Builder_Herin</h2><p style="color:var(--muted)">Avatar customization is planned for a future update.</p><button class="primary" id="avatarMarket">Explore marketplace</button></div></div></section>
@@ -113,7 +113,7 @@ async function refreshAccount(){
  const avatar=document.querySelector(".sidefoot .userpic");if(avatar)avatar.textContent=(label[0]||"R").toUpperCase();
  const profileTitle=document.querySelector("#p-profile .profile h2");if(profileTitle)profileTitle.textContent=label;
  const avatarTitle=document.querySelector("#p-avatar .panel h2");if(avatarTitle)avatarTitle.textContent=label;
- await renderCreations();await renderFriends();await renderMessages();
+ await renderCreations();await renderFriends();await renderMessages();await renderPublishedGames();
 }
 async function openProfileEditor(){
  if(!currentProfile){openAuth();return}
@@ -184,7 +184,7 @@ $("rodevAddFriend").onclick=async()=>{
  if(!currentProfile){openAuth();return}
  const username=prompt("Enter their exact RODEV username");if(username===null)return;
  if(!/^[A-Za-z0-9_]{3,20}$/.test(username.trim())){notify("Enter a valid username.");return}
- const {data:person,error:findError}=await supabase.from("profiles").select("id,username").ilike("username",username.trim()).maybeSingle();
+ const {data:person,error:findError}=await supabase.from("profiles").select("id,username").ilike("username",username.trim().replace(/[%_]/g,"\\ilike("username",username.trim())")).maybeSingle();
  if(findError||!person){notify("Couldn't find that username.");return}
  if(person.id===currentProfile.id){notify("You can't add yourself.");return}
  const {error}=await supabase.from("friendships").insert({requester_id:currentProfile.id,addressee_id:person.id,status:"pending"});
@@ -194,11 +194,21 @@ $("rodevAddFriend").onclick=async()=>{
 $("rodevNewMessage").onclick=async()=>{
  if(!currentProfile){openAuth();return}
  const username=prompt("Enter the username of an accepted friend");if(username===null)return;
- const {data:person,error}=await supabase.from("profiles").select("id,username,display_name").ilike("username",username.trim()).maybeSingle();
+ const {data:person,error}=await supabase.from("profiles").select("id,username,display_name").ilike("username",username.trim().replace(/[%_]/g,"\\ilike("username",username.trim()).maybeSingle()")).maybeSingle();
  if(error||!person){notify("Couldn't find that user.");return}
  const {data:friend}=await supabase.from("friendships").select("id").eq("status","accepted").or("and(requester_id.eq."+currentProfile.id+",addressee_id.eq."+person.id+"),and(requester_id.eq."+person.id+",addressee_id.eq."+currentProfile.id+")").maybeSingle();
  if(!friend){notify("You can only message accepted friends.");return}await messageFriend(person);
 };
+async function renderPublishedGames(){
+ const host=$("rodevPublishedGames");if(!host)return;
+ const {data:games,error}=await supabase.from("games").select("id,name,description,creator_id,created_at").eq("status","published").eq("visibility","public").order("created_at",{ascending:false}).limit(24);
+ if(error){host.innerHTML="<p>Published games couldn't be loaded.</p>";return}
+ host.innerHTML="";
+ if(!games?.length){host.innerHTML="<p style='color:#7d8495'>No creator-published games yet.</p>";return}
+ const ids=[...new Set(games.map(g=>g.creator_id))];let people={};
+ if(ids.length){const {data}=await supabase.from("profiles").select("id,username,display_name").in("id",ids);(data||[]).forEach(p=>people[p.id]=p)}
+ games.forEach(g=>{const card=document.createElement("div");card.className="game";card.innerHTML="<div class='thumb t6'><span>🎮</span></div><div class='gameinfo'><b>"+escapeHtml(g.name)+"</b><small>By "+escapeHtml(people[g.creator_id]?.display_name||people[g.creator_id]?.username||"RODEV creator")+"</small><small>"+escapeHtml(g.description||"Creator-published experience")+"</small><div class='sample'>PUBLISHED LISTING</div></div>";card.onclick=()=>notify("This is a published game listing. The playable game runtime is still being built.");host.appendChild(card)});
+}
 async function renderCreations(){
  const host=$("rodevCreationsList");if(!host||!currentProfile)return;
  const {data,error}=await supabase.from("studio_projects").select("id,title,description,published_game_id,updated_at").eq("owner_id",currentProfile.id).order("updated_at",{ascending:false});
@@ -224,7 +234,7 @@ window.rodevPublish=async function(){
   const {data:game,error}=await supabase.from("games").insert({creator_id:currentProfile.id,name:cleanName,description:description.slice(0,2000),visibility:"public",status:"published"}).select("id").single();
   if(error)throw error;
   const {error:updateError}=await supabase.from("studio_projects").update({published_game_id:game.id}).eq("id",projects[0].id);if(updateError)throw updateError;
-  await renderCreations();notify("Public game listing created! The playable game runtime is a separate next step.");
+  await renderCreations();await renderPublishedGames();notify("Public game listing created! The playable game runtime is a separate next step.");
  }catch(err){notify("Publish failed: "+err.message)}
 };
 $("p-creations .empty")?.insertAdjacentHTML("afterend","<div id='rodevCreationsList'></div>");
@@ -232,7 +242,7 @@ const editorTools=document.querySelector("#p-studio .tools");
 if(editorTools){const cloud=document.createElement("button");cloud.id="rodevCloudSave";cloud.textContent="☁ Save to cloud";cloud.onclick=()=>$("save").click();editorTools.insertBefore(cloud,editorTools.firstChild);
  const cloudLoad=document.createElement("button");cloudLoad.textContent="☁ Load cloud";cloudLoad.onclick=()=>window.rodevCloudLoad();editorTools.insertBefore(cloudLoad,editorTools.firstChild)}
 const {data:{session:initialSession}}=await supabase.auth.getSession();
-await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
+await renderPublishedGames();await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
 supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>refreshAccount().catch(err=>console.warn(err)),0)});
 </script>
 </body></html>
