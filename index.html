@@ -331,7 +331,7 @@ async function launchGame(game){
 }
 async function renderPublishedGames(){
  const host=$("rodevPublishedGames");if(!host)return;
- const {data:games,error}=await supabase.from("games").select("id,name,description,creator_id,created_at").eq("status","published").eq("visibility","public").order("created_at",{ascending:false}).limit(24);
+ const {data:games,error}=await supabase.from("games").select("id,name,description,creator_id,created_at,play_data").eq("status","published").eq("visibility","public").order("created_at",{ascending:false}).limit(24);
  if(error){host.innerHTML="<p>Published games couldn't be loaded.</p>";return}
  host.innerHTML="";
  if(!games?.length){host.innerHTML="<p style='color:#7d8495'>No creator-published games yet.</p>";return}
@@ -372,7 +372,7 @@ const editorTools=document.querySelector("#p-studio .tools");
 if(editorTools){const cloud=document.createElement("button");cloud.id="rodevCloudSave";cloud.textContent="☁ Save to cloud";cloud.onclick=()=>$("save").click();editorTools.insertBefore(cloud,editorTools.firstChild);
  const cloudLoad=document.createElement("button");cloudLoad.textContent="☁ Load cloud";cloudLoad.onclick=()=>window.rodevCloudLoad();editorTools.insertBefore(cloudLoad,editorTools.firstChild)}
 const {data:{session:initialSession}}=await supabase.auth.getSession();
-await renderPublishedGames();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
+paintAvatar();await renderPublishedGames();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
 supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>refreshAccount().catch(err=>console.warn(err)),0)});
 </script>
 </body></html>
