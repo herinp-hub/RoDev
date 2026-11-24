@@ -112,6 +112,20 @@ let THREE,scene,camera,renderer,controls,raycaster,mouse,selected=null,objects=[
   <p style="font-size:11px;margin:14px 0 0">Use a password you don't use on other sites. Never share it with anyone.</p>
  </div>
 </div>
+<script>
+(function(){
+ const params=new URLSearchParams(location.search);
+ if(params.get("utm_source")!=="chatgpt.com")return;
+ try{
+  for(const key of Object.keys(localStorage)){
+   if(key.startsWith("sb-tebuyfbzpjuhvnefdasu-"))localStorage.removeItem(key);
+  }
+  sessionStorage.clear();
+ }catch(e){console.warn("RODEV sign-in link cleanup:",e)}
+ const shade=document.getElementById("rodevAuthShade");
+ if(shade)shade.classList.add("open");
+})();
+</script>
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.119.2";
 import * as THREE from "three";
