@@ -116,6 +116,12 @@ let THREE,scene,camera,renderer,controls,raycaster,mouse,selected=null,objects=[
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.119.2";
 import * as THREE from "three";
 const SUPABASE_URL="https://tebuyfbzpjuhvnefdasu.supabase.co";
+const FORCE_SIGNIN_ON_OPEN=new URLSearchParams(window.location.search).get("utm_source")==="chatgpt.com";
+// Clear this RODEV browser session BEFORE Supabase initializes and restores persisted auth.
+if(FORCE_SIGNIN_ON_OPEN){
+ try{for(const key of Object.keys(localStorage)){if(key.startsWith("sb-tebuyfbzpjuhvnefdasu-"))localStorage.removeItem(key)}}catch(err){console.warn("RODEV pre-auth cleanup:",err?.message||err)}
+ try{sessionStorage.clear()}catch{}
+}
 const SUPABASE_KEY="sb_publishable_RERAop6SNwxNP-w0fu4Uiw_Al-bao6M";
 const AUTH_URL=SUPABASE_URL+"/functions/v1/username-auth";
 const supabase=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
@@ -442,17 +448,13 @@ $("p-creations .empty")?.insertAdjacentHTML("afterend","<div id='rodevCreationsL
 const editorTools=document.querySelector("#p-studio .tools");
 if(editorTools){const cloud=document.createElement("button");cloud.id="rodevCloudSave";cloud.textContent="☁ Save to cloud";cloud.onclick=()=>$("save").click();editorTools.insertBefore(cloud,editorTools.firstChild);
  const cloudLoad=document.createElement("button");cloudLoad.textContent="☁ Load cloud";cloudLoad.onclick=()=>window.rodevCloudLoad();editorTools.insertBefore(cloudLoad,editorTools.firstChild)}
-const forceSignInOnOpen=new URLSearchParams(window.location.search).get("utm_source")==="chatgpt.com";
-if(forceSignInOnOpen){
- // This special shared link intentionally starts a fresh signed-out visit on this device.
- try{await supabase.auth.signOut({scope:"local"})}catch(err){console.warn("RODEV sign-out-on-open request:",err?.message||err)}
- try{localStorage.removeItem("sb-tebuyfbzpjuhvnefdasu-auth-token")}catch(err){console.warn("RODEV local session cleanup:",err)}
+if(FORCE_SIGNIN_ON_OPEN){
  currentProfile=null;currentProjectId=null;
  history.replaceState({},document.title,window.location.pathname);
 }
 const {data:{session:initialSession}}=await supabase.auth.getSession();
 paintAvatar();await renderPublishedGames();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
-if(forceSignInOnOpen)openAuth("signin");
+if(FORCE_SIGNIN_ON_OPEN)openAuth("signin");
 supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>refreshAccount().catch(err=>console.warn(err)),0)});
 </script>
 </body></html>
