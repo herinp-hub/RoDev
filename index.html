@@ -79,6 +79,7 @@ function setMode(mode){authMode=mode;$("rodevSignInTab").classList.toggle("activ
 $("rodevAccountBtn")?.remove();
 const accountBtn=document.createElement("button");accountBtn.id="rodevAccountBtn";accountBtn.textContent="Sign in";$("createBtn").before(accountBtn);
 accountBtn.addEventListener("click",()=>currentProfile?openProfileEditor():openAuth("signin"));
+const signoutBtn=document.createElement("button");signoutBtn.className="soft";signoutBtn.id="rodevSignOutBtn";signoutBtn.textContent="Sign out";signoutBtn.style.display="none";accountBtn.after(signoutBtn);signoutBtn.onclick=()=>window.rodevSignOut();
 $("rodevSignInTab").onclick=()=>setMode("signin");$("rodevSignUpTab").onclick=()=>setMode("signup");
 $("rodevAuthX").onclick=closeAuth;$("rodevAuthCancel").onclick=closeAuth;
 shade.addEventListener("click",e=>{if(e.target===shade)closeAuth()});
@@ -104,11 +105,11 @@ $("rodevAuthForm").addEventListener("submit",async e=>{
 });
 async function refreshAccount(){
  const {data:{session}}=await supabase.auth.getSession();
- if(!session){currentProfile=null;accountBtn.textContent="Sign in";document.querySelector(".sidefoot b").textContent="Guest";document.querySelector(".sidefoot small").textContent="Not signed in";return}
+ if(!session){currentProfile=null;accountBtn.textContent="Sign in";signoutBtn.style.display="none";document.querySelector(".sidefoot b").textContent="Guest";document.querySelector(".sidefoot small").textContent="Not signed in";return}
  const {data,error}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
  if(error)throw error;
  currentProfile=data;const label=data?.display_name||data?.username||session.user.user_metadata?.username||"RODEV member";
- accountBtn.textContent=label;document.querySelector(".sidefoot b").textContent=label;document.querySelector(".sidefoot small").textContent="RODEV member";
+ accountBtn.textContent=label;signoutBtn.style.display="inline-block";document.querySelector(".sidefoot b").textContent=label;document.querySelector(".sidefoot small").textContent="RODEV member";
  const avatar=document.querySelector(".sidefoot .userpic");if(avatar)avatar.textContent=(label[0]||"R").toUpperCase();
  const profileTitle=document.querySelector("#p-profile .profile h2");if(profileTitle)profileTitle.textContent=label;
  const avatarTitle=document.querySelector("#p-avatar .panel h2");if(avatarTitle)avatarTitle.textContent=label;
@@ -228,7 +229,7 @@ window.rodevPublish=async function(){
 };
 $("p-creations .empty")?.insertAdjacentHTML("afterend","<div id='rodevCreationsList'></div>");
 const editorTools=document.querySelector("#p-studio .tools");
-if(editorTools){const cloud=document.createElement("button");cloud.id="rodevCloudSave";cloud.textContent="☁ Save to cloud";cloud.onclick=()=>{const raw=localStorage.getItem("rodev-draft");let draft=[];try{draft=JSON.parse(raw||"[]")}catch{}window.rodevCloudSave(draft)};editorTools.insertBefore(cloud,editorTools.firstChild);
+if(editorTools){const cloud=document.createElement("button");cloud.id="rodevCloudSave";cloud.textContent="☁ Save to cloud";cloud.onclick=()=>$("save").click();editorTools.insertBefore(cloud,editorTools.firstChild);
  const cloudLoad=document.createElement("button");cloudLoad.textContent="☁ Load cloud";cloudLoad.onclick=()=>window.rodevCloudLoad();editorTools.insertBefore(cloudLoad,editorTools.firstChild)}
 const {data:{session:initialSession}}=await supabase.auth.getSession();
 await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
