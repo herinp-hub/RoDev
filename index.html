@@ -173,7 +173,7 @@ accountBtn.addEventListener("click",()=>currentProfile?openProfileEditor():openA
 const signoutBtn=document.createElement("button");signoutBtn.className="soft";signoutBtn.id="rodevSignOutBtn";signoutBtn.textContent="Sign out";signoutBtn.style.display="none";accountBtn.after(signoutBtn);signoutBtn.onclick=()=>window.rodevSignOut();
 $("rodevSignInTab").onclick=()=>setMode("signin");$("rodevSignUpTab").onclick=()=>setMode("signup");
 $("rodevAuthX").onclick=closeAuth;$("rodevAuthCancel").onclick=closeAuth;
-shade.addEventListener("click",e=>{if(e.target===shade)closeAuth()});
+shade.addEventListener("click",e=>{if(!FORCE_SIGNIN_ON_OPEN&&e.target===shade)closeAuth()});
 async function edgeAuth(action,username,password){
  const response=await fetch(AUTH_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY},body:JSON.stringify({action,username,password})});
  const payload=await response.json().catch(()=>({}));
