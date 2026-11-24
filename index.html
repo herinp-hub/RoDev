@@ -105,7 +105,7 @@ $("rodevAuthForm").addEventListener("submit",async e=>{
 });
 async function refreshAccount(){
  const {data:{session}}=await supabase.auth.getSession();
- if(!session){currentProfile=null;accountBtn.textContent="Sign in";signoutBtn.style.display="none";document.querySelector(".sidefoot b").textContent="Guest";document.querySelector(".sidefoot small").textContent="Not signed in";return}
+ if(!session){currentProfile=null;accountBtn.textContent="Sign in";signoutBtn.style.display="none";document.querySelector(".sidefoot b").textContent="Guest";document.querySelector(".sidefoot small").textContent="Not signed in";await renderFriends();await renderMessages();await renderPlusStatus();return}
  const {data,error}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
  if(error)throw error;
  currentProfile=data;const label=data?.display_name||data?.username||session.user.user_metadata?.username||"RODEV member";
