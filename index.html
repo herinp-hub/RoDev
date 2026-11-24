@@ -178,26 +178,35 @@ let rodevSigningOut=false;
 window.rodevSignOut=async()=>{
  if(rodevSigningOut)return;
  rodevSigningOut=true;
- const buttons=[$("rodevSidebarSignOut"),$("rodevProfileSignOut"),$("rodevSignOutBtn")].filter(Boolean);
- buttons.forEach(b=>{b.disabled=true;b.dataset.oldText=b.textContent;b.textContent="Signing out…"});
+ const buttons=["rodevSidebarSignOut","rodevProfileSignOut","rodevSignOutBtn"].map(id=>$(id)).filter(Boolean);
+ buttons.forEach(b=>{b.disabled=true;b.textContent="Signing out…"});
  try{
-  const {error}=await supabase.auth.signOut({scope:"local"});
-  if(error)throw error;
+  if(!supabase?.auth?.signOut)throw new Error("Sign-out service is unavailable. Please refresh and try again.");
+  const result=await supabase.auth.signOut();
+  if(result?.error)throw result.error;
   currentProfile=null;currentProjectId=null;
-  closeAuth();
-  await refreshAccount();
-  notify("Signed out successfully.");
+  window.location.reload();
  }catch(err){
-  notify("Couldn't sign out: "+(err?.message||"Please try again."));
- }finally{
+  const message="Sign out failed: "+(err?.message||"Please try again.");
+  notify(message);
+  buttons.forEach(b=>{b.disabled=false;b.textContent="↪ Sign out"});
   rodevSigningOut=false;
-  buttons.forEach(b=>{b.disabled=false;if(b.dataset.oldText){b.textContent=b.dataset.oldText;delete b.dataset.oldText}});
  }
 };
 ["rodevSidebarSignOut","rodevProfileSignOut","rodevSignOutBtn"].forEach(id=>{
  const button=$(id);
- if(button)button.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();window.rodevSignOut()});
+ if(button){
+  button.type="button";
+  button.onclick=(event)=>{event.preventDefault();event.stopPropagation();window.rodevSignOut();};
+ }
 });
+document.addEventListener("click",event=>{
+ const button=event.target.closest("#rodevSidebarSignOut,#rodevProfileSignOut,#rodevSignOutBtn");
+ if(!button)return;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ window.rodevSignOut();
+},true);
 window.rodevCloudSave=async function(draft){
  if(!currentProfile){notify("Sign in first to save to the cloud.");openAuth();return}
  const title=prompt("Name this Studio project","My First Experience");if(title===null)return;
