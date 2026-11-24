@@ -96,10 +96,29 @@ let THREE,scene,camera,renderer,controls,raycaster,mouse,selected=null,objects=[
 .rodev-project-card{background:white;border:1px solid #e8ebf2;border-radius:12px;padding:14px;text-align:left}
 .rodev-project-card small{display:block;color:#7d8495;margin-top:5px}
 @media(max-width:720px){#rodevAccountBtn{padding:9px 10px;font-size:12px}}
+
+#rodevAuthShade.rodev-welcome{position:fixed;inset:0;z-index:99999;padding:24px;background:radial-gradient(ellipse at 18% 18%,#dce8ff 0,transparent 38%),radial-gradient(ellipse at 88% 82%,#dff8f0 0,transparent 34%),linear-gradient(135deg,#f7f9ff 0%,#eef3ff 48%,#f7fbff 100%);}
+#rodevAuthShade.rodev-welcome:before{content:"";position:absolute;width:520px;height:520px;border:1px solid #d8e2f7;border-radius:50%;right:-180px;top:-220px;box-shadow:0 0 0 55px #ffffff55,0 0 0 110px #ffffff30;pointer-events:none}
+#rodevAuthShade.rodev-welcome #rodevAuthCard{position:relative;width:min(470px,100%);padding:34px 36px 30px;border:1px solid #e5ebf8;border-radius:24px;box-shadow:0 30px 100px #29477920;}
+.rodev-auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:28px;font-weight:950;letter-spacing:.12em;color:#18233d;font-size:14px}
+.rodev-auth-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#3868ef;color:white;font-size:20px;letter-spacing:0;box-shadow:0 8px 18px #3868ef35}
+.rodev-auth-kicker{margin-left:auto;font-size:9px;letter-spacing:.15em;color:#8792a8}
+#rodevAuthShade.rodev-welcome #rodevAuthTitle{font-size:32px;line-height:1.12;letter-spacing:-.04em;color:#17233c;margin-bottom:9px}
+#rodevAuthShade.rodev-welcome #rodevAuthDesc{font-size:14px;color:#758198;margin:0 0 22px}
+#rodevAuthShade.rodev-welcome #rodevAuthMode{padding:5px;background:#f0f3fa;border-radius:12px;margin:0 0 20px}
+#rodevAuthShade.rodev-welcome #rodevAuthMode button{border:0;border-radius:9px;padding:11px;background:transparent}
+#rodevAuthShade.rodev-welcome #rodevAuthMode button.active{background:white;color:#315bd1;box-shadow:0 2px 8px #1d31500d}
+#rodevAuthShade.rodev-welcome #rodevAuthCard label{font-size:11px;color:#49566e;margin:14px 0 7px}
+#rodevAuthShade.rodev-welcome #rodevAuthCard input{border-radius:11px;padding:13px 14px;background:#fbfcff;border-color:#e1e7f2;font-size:14px}
+#rodevAuthShade.rodev-welcome #rodevAuthSubmit{border-radius:11px;padding:14px;font-size:14px;background:linear-gradient(135deg,#3868ef,#2855d9);box-shadow:0 8px 18px #3868ef2b}
+#rodevAuthShade.rodev-welcome #rodevAuthCancel,#rodevAuthShade.rodev-welcome #rodevAuthX{display:none!important}
+#rodevAuthShade.rodev-welcome #rodevAuthActions{margin-top:14px}
+#rodevAuthShade.rodev-welcome #rodevAuthCard form:after{content:"By continuing, you agree to keep your account details private.";display:block;color:#98a1b1;font-size:10px;text-align:center;margin-top:17px}
+@media(max-width:520px){#rodevAuthShade.rodev-welcome{padding:16px}#rodevAuthShade.rodev-welcome #rodevAuthCard{padding:27px 22px;border-radius:20px}#rodevAuthShade.rodev-welcome #rodevAuthTitle{font-size:28px}}
 </style>
 <div id="rodevAuthShade" role="dialog" aria-modal="true" aria-labelledby="rodevAuthTitle">
  <div id="rodevAuthCard">
-  <div style="display:flex;justify-content:space-between;align-items:center"><div class="eyebrow">RODEV ACCOUNT</div><button id="rodevAuthX" class="soft" type="button">✕</button></div>
+  <div class="rodev-auth-brand"><span class="rodev-auth-mark">R</span><span>RODEV</span><span class="rodev-auth-kicker">YOUR NEXT CHAPTER</span></div>
   <h2 id="rodevAuthTitle">Welcome to RODEV</h2><p id="rodevAuthDesc">Sign in or create an account to save your worlds online.</p>
   <div id="rodevAuthMode"><button id="rodevSignInTab" class="active" type="button">Sign in</button><button id="rodevSignUpTab" type="button">Create account</button></div>
   <form id="rodevAuthForm">
@@ -123,7 +142,7 @@ let THREE,scene,camera,renderer,controls,raycaster,mouse,selected=null,objects=[
   sessionStorage.clear();
  }catch(e){console.warn("RODEV sign-in link cleanup:",e)}
  const shade=document.getElementById("rodevAuthShade");
- if(shade)shade.classList.add("open");
+ if(shade){shade.classList.add("rodev-welcome","open");const title=document.getElementById("rodevAuthTitle");const desc=document.getElementById("rodevAuthDesc");if(title)title.textContent="Our journey starts now";if(desc)desc.textContent="Sign up or log in below to start building your world.";}
 })();
 </script>
 <script type="module">
@@ -140,7 +159,7 @@ const SUPABASE_KEY="sb_publishable_RERAop6SNwxNP-w0fu4Uiw_Al-bao6M";
 const AUTH_URL=SUPABASE_URL+"/functions/v1/username-auth";
 const supabase=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 window.rodevSupabase=supabase;
-let authMode="signin", currentProfile=null, currentProjectId=null;
+let authMode=FORCE_SIGNIN_ON_OPEN?"signup":"signin", currentProfile=null, currentProjectId=null;
 const $=id=>document.getElementById(id);
 const shade=$("rodevAuthShade"), authError=$("rodevAuthError");
 function notify(message){const t=$("toast");if(t){t.textContent=message;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2800)}else alert(message)}
@@ -162,19 +181,6 @@ async function edgeAuth(action,username,password){
  if(payload.session){const {error}=await supabase.auth.setSession({access_token:payload.session.access_token,refresh_token:payload.session.refresh_token});if(error)throw error}
  return payload;
 }
-$("rodevAuthForm").addEventListener("submit",async e=>{
- e.preventDefault();authError.textContent="";
- const username=$("rodevUsername").value.trim(),password=$("rodevPassword").value;
- if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){authError.textContent="Username must be 3–20 letters, numbers, or underscores.";return}
- if(password.length<8||password.length>128){authError.textContent="Password must be 8–128 characters.";return}
- const submit=$("rodevAuthSubmit");submit.disabled=true;submit.textContent="Please wait…";
- try{
-  const result=await edgeAuth(authMode,username,password);
-  if(result.created&&!result.session){setMode("signin");$("rodevUsername").value=username;authError.textContent=result.message||"Account created. Sign in now.";return}
-  closeAuth();await refreshAccount();notify("You're signed in. Welcome to RODEV!");
- }catch(err){authError.textContent=err.message||"Something went wrong."}
- finally{submit.disabled=false;submit.textContent=authMode==="signup"?"Create account":"Sign in"}
-});
 async function refreshAccount(){
  const {data:{session}}=await supabase.auth.getSession();
  if(!session){currentProfile=null;accountBtn.textContent="Sign in";signoutBtn.style.display="none";if($("rodevSidebarSignOutWrap"))$("rodevSidebarSignOutWrap").style.display="block";if($("rodevProfileSignOut"))$("rodevProfileSignOut").style.display="none";document.querySelector(".sidefoot b").textContent="Guest";document.querySelector(".sidefoot small").textContent="Not signed in";await renderFriends();await renderMessages();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();return}
@@ -468,7 +474,24 @@ if(FORCE_SIGNIN_ON_OPEN){
 }
 const {data:{session:initialSession}}=await supabase.auth.getSession();
 paintAvatar();await renderPublishedGames();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
-if(FORCE_SIGNIN_ON_OPEN)openAuth("signin");
+if(FORCE_SIGNIN_ON_OPEN)openAuth("signup");
 supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>refreshAccount().catch(err=>console.warn(err)),0)});
 </script>
+<script type="module">
+import { createClient as createAuthClient } from "https://esm.sh/@supabase/supabase-js@2.119.2";
+const authUrl="https://tebuyfbzpjuhvnefdasu.supabase.co";
+const authKey="sb_publishable_RERAop6SNwxNP-w0fu4Uiw_Al-bao6M";
+const authApi=authUrl+"/functions/v1/username-auth";
+const authSupabase=createAuthClient(authUrl,authKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const form=document.getElementById("rodevAuthForm");
+const err=document.getElementById("rodevAuthError");
+const modeButtons={signin:document.getElementById("rodevSignInTab"),signup:document.getElementById("rodevSignUpTab")};
+let mode=new URLSearchParams(location.search).get("utm_source")==="chatgpt.com"?"signup":"signin";
+function switchMode(next){mode=next;modeButtons.signin.classList.toggle("active",mode==="signin");modeButtons.signup.classList.toggle("active",mode==="signup");document.getElementById("rodevAuthTitle").textContent=mode==="signup"?"Our journey starts now":"Welcome back";document.getElementById("rodevAuthDesc").textContent=mode==="signup"?"Create your account below and start building your world.":"Log in below to continue your RODEV journey.";document.getElementById("rodevAuthSubmit").textContent=mode==="signup"?"Create account":"Log in";document.getElementById("rodevPassword").autocomplete=mode==="signup"?"new-password":"current-password";err.textContent="";}
+modeButtons.signin.addEventListener("click",()=>switchMode("signin"));
+modeButtons.signup.addEventListener("click",()=>switchMode("signup"));
+form.addEventListener("submit",async event=>{event.preventDefault();event.stopImmediatePropagation();err.textContent="";const username=document.getElementById("rodevUsername").value.trim();const password=document.getElementById("rodevPassword").value;const submit=document.getElementById("rodevAuthSubmit");if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){err.textContent="Username must be 3–20 letters, numbers, or underscores.";return;}if(password.length<8||password.length>128){err.textContent="Password must be at least 8 characters.";return;}submit.disabled=true;submit.textContent=mode==="signup"?"Creating account…":"Logging in…";try{const response=await fetch(authApi,{method:"POST",headers:{"Content-Type":"application/json","apikey":authKey,"Authorization":"Bearer "+authKey},body:JSON.stringify({action:mode,username,password})});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"Account request failed ("+response.status+").");if(payload.created&&!payload.session){switchMode("signin");document.getElementById("rodevUsername").value=username;err.textContent=payload.message||"Account created. Please log in.";return;}if(!payload.session)throw new Error("The account service did not return a login session. Please try again.");const {error}=await authSupabase.auth.setSession({access_token:payload.session.access_token,refresh_token:payload.session.refresh_token});if(error)throw error;location.replace(location.pathname+"?welcome=1");}catch(error){err.textContent=error?.message||"Something went wrong. Please try again.";}finally{submit.disabled=false;submit.textContent=mode==="signup"?"Create account":"Log in";}});
+switchMode(mode);
+</script>
+
 </body></html>
