@@ -442,8 +442,17 @@ $("p-creations .empty")?.insertAdjacentHTML("afterend","<div id='rodevCreationsL
 const editorTools=document.querySelector("#p-studio .tools");
 if(editorTools){const cloud=document.createElement("button");cloud.id="rodevCloudSave";cloud.textContent="☁ Save to cloud";cloud.onclick=()=>$("save").click();editorTools.insertBefore(cloud,editorTools.firstChild);
  const cloudLoad=document.createElement("button");cloudLoad.textContent="☁ Load cloud";cloudLoad.onclick=()=>window.rodevCloudLoad();editorTools.insertBefore(cloudLoad,editorTools.firstChild)}
+const forceSignInOnOpen=new URLSearchParams(window.location.search).get("utm_source")==="chatgpt.com";
+if(forceSignInOnOpen){
+ // This special shared link intentionally starts a fresh signed-out visit on this device.
+ try{await supabase.auth.signOut({scope:"local"})}catch(err){console.warn("RODEV sign-out-on-open request:",err?.message||err)}
+ try{localStorage.removeItem("sb-tebuyfbzpjuhvnefdasu-auth-token")}catch(err){console.warn("RODEV local session cleanup:",err)}
+ currentProfile=null;currentProjectId=null;
+ history.replaceState({},document.title,window.location.pathname);
+}
 const {data:{session:initialSession}}=await supabase.auth.getSession();
 paintAvatar();await renderPublishedGames();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
+if(forceSignInOnOpen)openAuth("signin");
 supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>refreshAccount().catch(err=>console.warn(err)),0)});
 </script>
 </body></html>
