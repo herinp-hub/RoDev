@@ -181,19 +181,14 @@ window.rodevSignOut=async()=>{
  const buttons=["rodevSidebarSignOut","rodevProfileSignOut","rodevSignOutBtn"].map(id=>$(id)).filter(Boolean);
  buttons.forEach(b=>{b.disabled=true;b.textContent="Signing out…"});
  try{
-  if(!supabase?.auth?.signOut)throw new Error("Sign-out service is unavailable. Please refresh and try again.");
-  const {error}=await supabase.auth.signOut({scope:"local"});
-  const {data:{session}}=await supabase.auth.getSession();
-  if(!session){
-   currentProfile=null;currentProjectId=null;
-   window.location.replace(window.location.pathname);
-   return;
-  }
-  if(error)throw error;
-  throw new Error("Your RODEV session is still active. Please try once more.");
+  // Try the official local sign-out first, but always clear this app's persisted browser session.
+  try{await Promise.race([supabase.auth.signOut({scope:"local"}),new Promise(resolve=>setTimeout(resolve,2500))]);}catch(err){console.warn("RODEV local sign-out request failed; clearing local session:",err?.message||err)}
+  try{localStorage.removeItem("sb-tebuyfbzpjuhvnefdasu-auth-token");}catch(err){console.warn("RODEV local auth storage could not be cleared:",err)}
+  try{sessionStorage.clear();}catch{}
+  currentProfile=null;currentProjectId=null;
+  window.location.replace(window.location.pathname+"?signedout="+Date.now());
  }catch(err){
-  const message="Sign out failed: "+(err?.message||"Please try again.");
-  notify(message);
+  notify("Sign out failed: "+(err?.message||"Please refresh and try again."));
   buttons.forEach(b=>{b.disabled=false;b.textContent="↪ Sign out"});
   rodevSigningOut=false;
  }
