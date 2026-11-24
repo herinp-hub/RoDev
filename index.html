@@ -182,10 +182,15 @@ window.rodevSignOut=async()=>{
  buttons.forEach(b=>{b.disabled=true;b.textContent="Signing out…"});
  try{
   if(!supabase?.auth?.signOut)throw new Error("Sign-out service is unavailable. Please refresh and try again.");
-  const result=await supabase.auth.signOut();
-  if(result?.error)throw result.error;
-  currentProfile=null;currentProjectId=null;
-  window.location.reload();
+  const {error}=await supabase.auth.signOut({scope:"local"});
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session){
+   currentProfile=null;currentProjectId=null;
+   window.location.replace(window.location.pathname);
+   return;
+  }
+  if(error)throw error;
+  throw new Error("Your RODEV session is still active. Please try once more.");
  }catch(err){
   const message="Sign out failed: "+(err?.message||"Please try again.");
   notify(message);
