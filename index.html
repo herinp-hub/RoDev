@@ -19,5 +19,168 @@
 const data=[['Skyline Obby','RODEV Originals','OBBY','🏙️','t1'],['Coastal Life RP','WaveWorks','ROLEPLAY','🌴','t2'],['Pet Park','LittleCloud','SIMULATOR','🐾','t3'],['Dungeon Quest','Moonbyte','ADVENTURE','⚔️','t4'],['Fashion Runway','StudioM','SOCIAL','👟','t5'],['Ocean Explorer','BlueFin','ADVENTURE','🌊','t6'],['Build & Chill','BrickLab','SANDBOX','🧱','t3'],['Racing Rivals','TurboTeam','RACING','🏎️','t1']];
 function card(g){return '<article class="game" tabindex="0"><div class="thumb '+g[4]+'"><span>'+g[3]+'</span></div><div class="gameinfo"><b>'+g[0]+'</b><small>by '+g[1]+'</small><div class="sample">Sample experience · '+g[2]+'</div></div></article>'}document.getElementById('homeGames').innerHTML=data.slice(0,4).map(card).join('');document.getElementById('allGames').innerHTML=data.map(card).join('');
 window.go=function(n){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('p-'+n).classList.add('active');document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.page===n));window.scrollTo({top:0,behavior:'smooth'});if(n==='studio'&&window.rodevResize)window.rodevResize()};document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>go(b.dataset.page));document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));document.getElementById('createBtn').onclick=()=>go('studio');document.getElementById('heroCreate').onclick=()=>go('studio');document.getElementById('seeAll').onclick=()=>go('games');document.getElementById('newExperience').onclick=()=>go('studio');document.getElementById('avatarMarket').onclick=()=>go('market');document.getElementById('notify').onclick=()=>toast('You are all caught up!');document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{b.parentElement.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));b.classList.add('active')});let timer;window.toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>t.classList.remove('show'),2300)};document.getElementById('search').onkeydown=e=>{if(e.key==='Enter'){go('games');toast('Showing sample experiences.')}};
-let THREE,scene,camera,renderer,controls,raycaster,mouse,selected=null,objects=[],playing=false,player=null,keys={};async function init(){try{THREE=await import('three');const {OrbitControls}=await import('three/addons/controls/OrbitControls.js');const host=document.getElementById('scene'),canvas=document.getElementById('view');scene=new THREE.Scene();scene.background=new THREE.Color('#c9d8e8');scene.fog=new THREE.Fog('#c9d8e8',35,85);camera=new THREE.PerspectiveCamera(55,host.clientWidth/host.clientHeight,.1,200);camera.position.set(12,11,15);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(host.clientWidth,host.clientHeight);renderer.shadowMap.enabled=true;scene.add(new THREE.HemisphereLight(0xffffff,0x778899,2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(-8,16,9);sun.castShadow=true;scene.add(sun);controls=new OrbitControls(camera,canvas);controls.target.set(0,1,0);controls.enableDamping=true;controls.touches.ONE=THREE.TOUCH.ROTATE;controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;const grid=new THREE.GridHelper(60,60,0x8799ad,0xaebdce);grid.position.y=.01;scene.add(grid);const floor=new THREE.Mesh(new THREE.BoxGeometry(30,.4,30),new THREE.MeshStandardMaterial({color:'#70b77e',roughness:1}));floor.position.y=-.22;floor.receiveShadow=true;floor.name='Baseplate';scene.add(floor);objects.push(floor);make(new THREE.BoxGeometry(2,2,2),'#f2b35c',[0,1,0],'Block');make(new THREE.BoxGeometry(2,.6,2),'#79aeea',[4,.3,-2],'Platform');raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();canvas.addEventListener('pointerdown',e=>{if(playing)return;const r=canvas.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(objects,true);if(hits.length){let o=hits[0].object;while(o.parent&&o.parent!==scene)o=o.parent;select(o)}});window.addEventListener('resize',resize);animate()}catch(e){document.getElementById('scene').innerHTML='<div style="padding:30px">3D editor could not load. Check your connection and refresh.</div>'}}function make(geo,color,pos,name){const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:.7}));m.position.set(...pos);m.castShadow=true;m.receiveShadow=true;m.name=name;scene.add(m);objects.push(m);select(m);count();return m}function add(type){if(!scene)return;let geo,color='#efb05e';if(type==='Block')geo=new THREE.BoxGeometry(2,2,2);if(type==='Sphere')geo=new THREE.SphereGeometry(1.1,24,16);if(type==='Ramp')geo=new THREE.ConeGeometry(1.4,2,4);if(type==='Tree'){const g=new THREE.Group(),tr=new THREE.Mesh(new THREE.CylinderGeometry(.18,.24,1.5,8),new THREE.MeshStandardMaterial({color:'#815b3b'})),leaves=new THREE.Mesh(new THREE.ConeGeometry(1.05,2.2,8),new THREE.MeshStandardMaterial({color:'#368d57'}));tr.position.y=.75;leaves.position.y=2.35;g.add(tr,leaves);g.position.set(Math.round(Math.random()*6-3),0,Math.round(Math.random()*6-3));g.name='Tree';scene.add(g);objects.push(g);select(g);count();return}make(geo,color,[Math.round(Math.random()*6-3),1,Math.round(Math.random()*6-3)],type)}function select(o){selected=o;document.getElementById('objname').value=o.name||'Object';document.getElementById('color').value='#'+(o.material?.color?.getHexString()||'70b77e');['x','y','z'].forEach((k,i)=>document.getElementById(k).value=o.position.toArray()[i].toFixed(1))}function count(){document.getElementById('count').textContent=objects.length+' objects'}function resize(){if(!renderer)return;const h=document.getElementById('scene');camera.aspect=h.clientWidth/h.clientHeight;camera.updateProjectionMatrix();renderer.setSize(h.clientWidth,h.clientHeight)}window.rodevResize=resize;function animate(){requestAnimationFrame(animate);if(playing&&player){const v=.12;player.position.x+=(keys.d? v:0)-(keys.a?v:0);player.position.z+=(keys.s? v:0)-(keys.w?v:0);camera.position.x+=(player.position.x+8-camera.position.x)*.06;camera.position.z+=(player.position.z+10-camera.position.z)*.06;camera.lookAt(player.position)}if(controls&&controls.enabled)controls.update();if(renderer)renderer.render(scene,camera)}document.getElementById('block').onclick=()=>add('Block');document.getElementById('sphere').onclick=()=>add('Sphere');document.getElementById('ramp').onclick=()=>add('Ramp');document.getElementById('tree').onclick=()=>add('Tree');document.getElementById('rotate').onclick=()=>{if(selected&&selected.name!=='Baseplate')selected.rotation.y+=Math.PI/4};document.getElementById('delete').onclick=()=>{if(selected&&selected.name!=='Baseplate'){scene.remove(selected);objects=objects.filter(x=>x!==selected);selected=null;document.getElementById('objname').value='Nothing selected';count()}};document.getElementById('color').oninput=e=>{if(selected?.material?.color)selected.material.color.set(e.target.value)};['x','y','z'].forEach((k,i)=>document.getElementById(k).onchange=e=>{if(selected)selected.position.setComponent(i,Number(e.target.value)||0)});document.getElementById('save').onclick=()=>{const draft=objects.filter(o=>o.name!=='Baseplate').map(o=>({name:o.name,position:o.position.toArray(),rotation:o.rotation.toArray(),color:o.material?.color?.getHexString()||'70b77e',type:o.geometry?.type||'Group'}));localStorage.setItem('rodev-draft',JSON.stringify(draft));toast('Draft saved on this device.')};document.getElementById('load').onclick=()=>{const raw=localStorage.getItem('rodev-draft');if(!raw){toast('No saved draft found on this device.');return}objects.filter(o=>o.name!=='Baseplate').forEach(o=>scene.remove(o));objects=objects.filter(o=>o.name==='Baseplate');JSON.parse(raw).forEach(o=>{let geo=o.type==='SphereGeometry'?new THREE.SphereGeometry(1.1,24,16):o.type==='ConeGeometry'?new THREE.ConeGeometry(1.4,2,4):new THREE.BoxGeometry(2,2,2);const m=make(geo,'#'+o.color,o.position,o.name);m.rotation.fromArray(o.rotation)});toast('Draft loaded.')};document.getElementById('publish').onclick=()=>toast('Publishing will be connected after creator accounts and cloud saving are built.');document.getElementById('play').onclick=()=>{playing=!playing;document.getElementById('play').textContent=playing?'■ Stop test':'▶ Play test';document.getElementById('playstate').textContent=playing?'Play test · WASD to move':'Edit mode · Drag to orbit · Scroll to zoom';controls.enabled=!playing;if(playing){player=new THREE.Mesh(new THREE.BoxGeometry(.8,1.6,.8),new THREE.MeshStandardMaterial({color:'#f5a15e'}));player.position.set(0,.8,5);scene.add(player);camera.position.set(8,8,15)}else{if(player)scene.remove(player);player=null;camera.position.set(12,11,15);controls.target.set(0,1,0)}};window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true});window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});init();
-</script></body></html>
+let THREE,scene,camera,renderer,controls,raycaster,mouse,selected=null,objects=[],playing=false,player=null,keys={};async function init(){try{THREE=await import('three');const {OrbitControls}=await import('three/addons/controls/OrbitControls.js');const host=document.getElementById('scene'),canvas=document.getElementById('view');scene=new THREE.Scene();scene.background=new THREE.Color('#c9d8e8');scene.fog=new THREE.Fog('#c9d8e8',35,85);camera=new THREE.PerspectiveCamera(55,host.clientWidth/host.clientHeight,.1,200);camera.position.set(12,11,15);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(host.clientWidth,host.clientHeight);renderer.shadowMap.enabled=true;scene.add(new THREE.HemisphereLight(0xffffff,0x778899,2));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(-8,16,9);sun.castShadow=true;scene.add(sun);controls=new OrbitControls(camera,canvas);controls.target.set(0,1,0);controls.enableDamping=true;controls.touches.ONE=THREE.TOUCH.ROTATE;controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;const grid=new THREE.GridHelper(60,60,0x8799ad,0xaebdce);grid.position.y=.01;scene.add(grid);const floor=new THREE.Mesh(new THREE.BoxGeometry(30,.4,30),new THREE.MeshStandardMaterial({color:'#70b77e',roughness:1}));floor.position.y=-.22;floor.receiveShadow=true;floor.name='Baseplate';scene.add(floor);objects.push(floor);make(new THREE.BoxGeometry(2,2,2),'#f2b35c',[0,1,0],'Block');make(new THREE.BoxGeometry(2,.6,2),'#79aeea',[4,.3,-2],'Platform');raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();canvas.addEventListener('pointerdown',e=>{if(playing)return;const r=canvas.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(objects,true);if(hits.length){let o=hits[0].object;while(o.parent&&o.parent!==scene)o=o.parent;select(o)}});window.addEventListener('resize',resize);animate()}catch(e){document.getElementById('scene').innerHTML='<div style="padding:30px">3D editor could not load. Check your connection and refresh.</div>'}}function make(geo,color,pos,name){const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:.7}));m.position.set(...pos);m.castShadow=true;m.receiveShadow=true;m.name=name;scene.add(m);objects.push(m);select(m);count();return m}function add(type){if(!scene)return;let geo,color='#efb05e';if(type==='Block')geo=new THREE.BoxGeometry(2,2,2);if(type==='Sphere')geo=new THREE.SphereGeometry(1.1,24,16);if(type==='Ramp')geo=new THREE.ConeGeometry(1.4,2,4);if(type==='Tree'){const g=new THREE.Group(),tr=new THREE.Mesh(new THREE.CylinderGeometry(.18,.24,1.5,8),new THREE.MeshStandardMaterial({color:'#815b3b'})),leaves=new THREE.Mesh(new THREE.ConeGeometry(1.05,2.2,8),new THREE.MeshStandardMaterial({color:'#368d57'}));tr.position.y=.75;leaves.position.y=2.35;g.add(tr,leaves);g.position.set(Math.round(Math.random()*6-3),0,Math.round(Math.random()*6-3));g.name='Tree';scene.add(g);objects.push(g);select(g);count();return}make(geo,color,[Math.round(Math.random()*6-3),1,Math.round(Math.random()*6-3)],type)}function select(o){selected=o;document.getElementById('objname').value=o.name||'Object';document.getElementById('color').value='#'+(o.material?.color?.getHexString()||'70b77e');['x','y','z'].forEach((k,i)=>document.getElementById(k).value=o.position.toArray()[i].toFixed(1))}function count(){document.getElementById('count').textContent=objects.length+' objects'}function resize(){if(!renderer)return;const h=document.getElementById('scene');camera.aspect=h.clientWidth/h.clientHeight;camera.updateProjectionMatrix();renderer.setSize(h.clientWidth,h.clientHeight)}window.rodevResize=resize;function animate(){requestAnimationFrame(animate);if(playing&&player){const v=.12;player.position.x+=(keys.d? v:0)-(keys.a?v:0);player.position.z+=(keys.s? v:0)-(keys.w?v:0);camera.position.x+=(player.position.x+8-camera.position.x)*.06;camera.position.z+=(player.position.z+10-camera.position.z)*.06;camera.lookAt(player.position)}if(controls&&controls.enabled)controls.update();if(renderer)renderer.render(scene,camera)}document.getElementById('block').onclick=()=>add('Block');document.getElementById('sphere').onclick=()=>add('Sphere');document.getElementById('ramp').onclick=()=>add('Ramp');document.getElementById('tree').onclick=()=>add('Tree');document.getElementById('rotate').onclick=()=>{if(selected&&selected.name!=='Baseplate')selected.rotation.y+=Math.PI/4};document.getElementById('delete').onclick=()=>{if(selected&&selected.name!=='Baseplate'){scene.remove(selected);objects=objects.filter(x=>x!==selected);selected=null;document.getElementById('objname').value='Nothing selected';count()}};document.getElementById('color').oninput=e=>{if(selected?.material?.color)selected.material.color.set(e.target.value)};['x','y','z'].forEach((k,i)=>document.getElementById(k).onchange=e=>{if(selected)selected.position.setComponent(i,Number(e.target.value)||0)});document.getElementById('save').onclick=()=>{const draft=objects.filter(o=>o.name!=='Baseplate').map(o=>({name:o.name,position:o.position.toArray(),rotation:o.rotation.toArray(),color:o.material?.color?.getHexString()||'70b77e',type:o.geometry?.type||'Group'}));localStorage.setItem('rodev-draft',JSON.stringify(draft));toast('Draft saved on this device.');if(window.rodevCloudSave)window.rodevCloudSave(draft)};document.getElementById('load').onclick=()=>{const raw=localStorage.getItem('rodev-draft');if(!raw){toast('No saved draft found on this device.');return}objects.filter(o=>o.name!=='Baseplate').forEach(o=>scene.remove(o));objects=objects.filter(o=>o.name==='Baseplate');JSON.parse(raw).forEach(o=>{let geo=o.type==='SphereGeometry'?new THREE.SphereGeometry(1.1,24,16):o.type==='ConeGeometry'?new THREE.ConeGeometry(1.4,2,4):new THREE.BoxGeometry(2,2,2);const m=make(geo,'#'+o.color,o.position,o.name);m.rotation.fromArray(o.rotation)});toast('Draft loaded.')};document.getElementById('publish').onclick=()=>{if(window.rodevPublish)window.rodevPublish();else toast('Sign in to publish.')};document.getElementById('play').onclick=()=>{playing=!playing;document.getElementById('play').textContent=playing?'■ Stop test':'▶ Play test';document.getElementById('playstate').textContent=playing?'Play test · WASD to move':'Edit mode · Drag to orbit · Scroll to zoom';controls.enabled=!playing;if(playing){player=new THREE.Mesh(new THREE.BoxGeometry(.8,1.6,.8),new THREE.MeshStandardMaterial({color:'#f5a15e'}));player.position.set(0,.8,5);scene.add(player);camera.position.set(8,8,15)}else{if(player)scene.remove(player);player=null;camera.position.set(12,11,15);controls.target.set(0,1,0)}};window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true});window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});init();
+</script>
+<style>
+#rodevAccountBtn{border:0;border-radius:9px;padding:10px 14px;background:#edf2ff;color:#315bd1;font-weight:850}
+#rodevAuthShade{display:none;position:fixed;inset:0;background:#10182b88;z-index:30;align-items:center;justify-content:center;padding:16px}
+#rodevAuthShade.open{display:flex}
+#rodevAuthCard{width:min(440px,100%);background:white;border-radius:18px;padding:24px;box-shadow:0 24px 80px #10182b44}
+#rodevAuthCard h2{margin:0 0 6px;font-size:24px}
+#rodevAuthCard p{color:#7d8495;line-height:1.5}
+#rodevAuthCard label{display:block;font-size:12px;font-weight:800;color:#596174;margin:13px 0 6px}
+#rodevAuthCard input,#rodevAuthCard textarea{width:100%;padding:12px;border:1px solid #e1e5ef;border-radius:9px;outline:none;font:inherit}
+#rodevAuthCard textarea{min-height:80px;resize:vertical}
+#rodevAuthCard input:focus,#rodevAuthCard textarea:focus{border-color:#8da8ff;box-shadow:0 0 0 3px #3868ef12}
+#rodevAuthActions{display:flex;gap:8px;margin-top:18px}
+#rodevAuthActions button{flex:1;border:0;border-radius:9px;padding:12px;font-weight:850}
+#rodevAuthSubmit{background:#3868ef;color:white}
+#rodevAuthCancel{background:#f0f2f7;color:#596174}
+#rodevAuthError{color:#b42318;font-size:12px;min-height:18px;margin-top:10px}
+#rodevAuthMode{display:flex;gap:8px;margin:15px 0}
+#rodevAuthMode button{flex:1;border:1px solid #e1e5ef;border-radius:8px;background:white;padding:9px;font-weight:800;color:#687084}
+#rodevAuthMode button.active{background:#edf2ff;border-color:#cbd8ff;color:#315bd1}
+#rodevCloudSave{background:#edf2ff!important;color:#315bd1!important}
+#rodevCreationsList{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px}
+.rodev-project-card{background:white;border:1px solid #e8ebf2;border-radius:12px;padding:14px;text-align:left}
+.rodev-project-card small{display:block;color:#7d8495;margin-top:5px}
+@media(max-width:720px){#rodevAccountBtn{padding:9px 10px;font-size:12px}}
+</style>
+<div id="rodevAuthShade" role="dialog" aria-modal="true" aria-labelledby="rodevAuthTitle">
+ <div id="rodevAuthCard">
+  <div style="display:flex;justify-content:space-between;align-items:center"><div class="eyebrow">RODEV ACCOUNT</div><button id="rodevAuthX" class="soft" type="button">✕</button></div>
+  <h2 id="rodevAuthTitle">Welcome to RODEV</h2><p id="rodevAuthDesc">Sign in or create an account to save your worlds online.</p>
+  <div id="rodevAuthMode"><button id="rodevSignInTab" class="active" type="button">Sign in</button><button id="rodevSignUpTab" type="button">Create account</button></div>
+  <form id="rodevAuthForm">
+   <label for="rodevUsername">Username</label><input id="rodevUsername" autocomplete="username" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" required placeholder="3–20 letters, numbers, or underscores">
+   <label for="rodevPassword">Password</label><input id="rodevPassword" type="password" autocomplete="current-password" minlength="8" maxlength="128" required placeholder="At least 8 characters">
+   <div id="rodevProfileFields" style="display:none"><label for="rodevDisplayName">Display name</label><input id="rodevDisplayName" maxlength="40" placeholder="How people see you"></div>
+   <div id="rodevAuthError" role="alert"></div>
+   <div id="rodevAuthActions"><button id="rodevAuthSubmit" type="submit">Sign in</button><button id="rodevAuthCancel" type="button">Cancel</button></div>
+  </form>
+  <p style="font-size:11px;margin:14px 0 0">Use a password you don't use on other sites. Never share it with anyone.</p>
+ </div>
+</div>
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.119.2";
+const SUPABASE_URL="https://tebuyfbzpjuhvnefdasu.supabase.co";
+const SUPABASE_KEY="sb_publishable_RERAop6SNwxNP-w0fu4Uiw_Al-bao6M";
+const AUTH_URL=SUPABASE_URL+"/functions/v1/username-auth";
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+window.rodevSupabase=supabase;
+let authMode="signin", currentProfile=null, currentProjectId=null;
+const $=id=>document.getElementById(id);
+const shade=$("rodevAuthShade"), authError=$("rodevAuthError");
+function notify(message){const t=$("toast");if(t){t.textContent=message;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2800)}else alert(message)}
+function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function openAuth(mode="signin"){setMode(mode);shade.classList.add("open");$("rodevUsername").focus()}
+function closeAuth(){shade.classList.remove("open");authError.textContent=""}
+function setMode(mode){authMode=mode;$("rodevSignInTab").classList.toggle("active",mode==="signin");$("rodevSignUpTab").classList.toggle("active",mode==="signup");$("rodevAuthTitle").textContent=mode==="signup"?"Create your RODEV account":"Welcome to RODEV";$("rodevAuthDesc").textContent=mode==="signup"?"Choose a username and password to start creating.":"Sign in to access your profile and cloud projects.";$("rodevAuthSubmit").textContent=mode==="signup"?"Create account":"Sign in";$("rodevProfileFields").style.display=mode==="signup"?"block":"none";$("rodevPassword").autocomplete=mode==="signup"?"new-password":"current-password";authError.textContent=""}
+$("rodevAccountBtn")?.remove();
+const accountBtn=document.createElement("button");accountBtn.id="rodevAccountBtn";accountBtn.textContent="Sign in";$("createBtn").before(accountBtn);
+accountBtn.addEventListener("click",()=>currentProfile?openProfileEditor():openAuth("signin"));
+$("rodevSignInTab").onclick=()=>setMode("signin");$("rodevSignUpTab").onclick=()=>setMode("signup");
+$("rodevAuthX").onclick=closeAuth;$("rodevAuthCancel").onclick=closeAuth;
+shade.addEventListener("click",e=>{if(e.target===shade)closeAuth()});
+async function edgeAuth(action,username,password){
+ const response=await fetch(AUTH_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY},body:JSON.stringify({action,username,password})});
+ const payload=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(payload.error||"Account request failed. Please try again.");
+ if(payload.session){const {error}=await supabase.auth.setSession({access_token:payload.session.access_token,refresh_token:payload.session.refresh_token});if(error)throw error}
+ return payload;
+}
+$("rodevAuthForm").addEventListener("submit",async e=>{
+ e.preventDefault();authError.textContent="";
+ const username=$("rodevUsername").value.trim(),password=$("rodevPassword").value;
+ if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){authError.textContent="Username must be 3–20 letters, numbers, or underscores.";return}
+ if(password.length<8||password.length>128){authError.textContent="Password must be 8–128 characters.";return}
+ const submit=$("rodevAuthSubmit");submit.disabled=true;submit.textContent="Please wait…";
+ try{
+  const result=await edgeAuth(authMode,username,password);
+  if(result.created&&!result.session){setMode("signin");$("rodevUsername").value=username;authError.textContent=result.message||"Account created. Sign in now.";return}
+  closeAuth();await refreshAccount();notify("You're signed in. Welcome to RODEV!");
+ }catch(err){authError.textContent=err.message||"Something went wrong."}
+ finally{submit.disabled=false;submit.textContent=authMode==="signup"?"Create account":"Sign in"}
+});
+async function refreshAccount(){
+ const {data:{session}}=await supabase.auth.getSession();
+ if(!session){currentProfile=null;accountBtn.textContent="Sign in";document.querySelector(".sidefoot b").textContent="Guest";document.querySelector(".sidefoot small").textContent="Not signed in";return}
+ const {data,error}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+ if(error)throw error;
+ currentProfile=data;const label=data?.display_name||data?.username||session.user.user_metadata?.username||"RODEV member";
+ accountBtn.textContent=label;document.querySelector(".sidefoot b").textContent=label;document.querySelector(".sidefoot small").textContent="RODEV member";
+ const avatar=document.querySelector(".sidefoot .userpic");if(avatar)avatar.textContent=(label[0]||"R").toUpperCase();
+ const profileTitle=document.querySelector("#p-profile .profile h2");if(profileTitle)profileTitle.textContent=label;
+ const avatarTitle=document.querySelector("#p-avatar .panel h2");if(avatarTitle)avatarTitle.textContent=label;
+ await renderCreations();
+}
+async function openProfileEditor(){
+ if(!currentProfile){openAuth();return}
+ const display=prompt("Display name",currentProfile.display_name||currentProfile.username);if(display===null)return;
+ const bio=prompt("Profile bio",currentProfile.bio||"");if(bio===null)return;
+ const {data,error}=await supabase.from("profiles").update({display_name:display.trim().slice(0,40),bio:bio.trim().slice(0,500)}).eq("id",currentProfile.id).select().single();
+ if(error){notify("Couldn't update profile: "+error.message);return}currentProfile=data;await refreshAccount();notify("Profile updated.");
+}
+window.rodevSignOut=async()=>{const {error}=await supabase.auth.signOut();if(error){notify(error.message);return}currentProfile=null;currentProjectId=null;await refreshAccount();notify("Signed out.")};
+window.rodevCloudSave=async function(draft){
+ if(!currentProfile){notify("Sign in first to save to the cloud.");openAuth();return}
+ const title=prompt("Name this Studio project","My First Experience");if(title===null)return;
+ const cleanTitle=title.trim().slice(0,80)||"Untitled project";
+ try{
+  let query=supabase.from("studio_projects").select("id").eq("owner_id",currentProfile.id).eq("title",cleanTitle).order("updated_at",{ascending:false}).limit(1);
+  const {data:found,error:findError}=await query;if(findError)throw findError;
+  const projectData={objects:draft,schema_version:1,editor:"rodev-studio"};
+  if(found&&found.length){currentProjectId=found[0].id;const {error}=await supabase.from("studio_projects").update({project_data:projectData,description:"RODEV Studio project"}).eq("id",currentProjectId);if(error)throw error}
+  else{const {data,error}=await supabase.from("studio_projects").insert({owner_id:currentProfile.id,title:cleanTitle,description:"RODEV Studio project",project_data:projectData}).select("id").single();if(error)throw error;currentProjectId=data.id}
+  await renderCreations();notify("Cloud save complete: "+cleanTitle);
+ }catch(err){notify("Cloud save failed: "+err.message)}
+};
+window.rodevCloudLoad=async function(projectId){
+ if(!currentProfile){openAuth();return}
+ try{
+  let q=supabase.from("studio_projects").select("id,title,project_data").eq("owner_id",currentProfile.id);
+  if(projectId)q=q.eq("id",projectId);else q=q.order("updated_at",{ascending:false}).limit(1);
+  const {data,error}=await q;if(error)throw error;
+  const row=Array.isArray(data)?data[0]:data;if(!row){notify("No cloud project found yet.");return}
+  const draft=row.project_data?.objects;if(!Array.isArray(draft)){notify("This project has no compatible saved scene.");return}
+  localStorage.setItem("rodev-draft",JSON.stringify(draft));currentProjectId=row.id;
+  $("load").click();notify("Loaded cloud project: "+row.title);
+ }catch(err){notify("Cloud load failed: "+err.message)}
+};
+async function renderCreations(){
+ const host=$("rodevCreationsList");if(!host||!currentProfile)return;
+ const {data,error}=await supabase.from("studio_projects").select("id,title,description,published_game_id,updated_at").eq("owner_id",currentProfile.id).order("updated_at",{ascending:false});
+ if(error){host.innerHTML="<p>Couldn't load cloud projects.</p>";return}
+ host.innerHTML="";
+ if(!data?.length){host.innerHTML="<div class='empty'>No cloud projects yet. Save a project from Studio to see it here.</div>";return}
+ data.forEach(row=>{
+  const card=document.createElement("div");card.className="rodev-project-card";
+  card.innerHTML="<b>"+escapeHtml(row.title)+"</b><small>"+(row.published_game_id?"Published listing":"Cloud saved")+"</small><small>Updated "+new Date(row.updated_at).toLocaleString()+"</small>";
+  const load=document.createElement("button");load.className="soft";load.style.marginTop="10px";load.textContent="Open in Studio";load.onclick=()=>{document.querySelector('[data-page=studio]').click();window.rodevCloudLoad(row.id)};
+  card.appendChild(load);host.appendChild(card);
+ });
+}
+window.rodevPublish=async function(){
+ if(!currentProfile){openAuth();return}
+ const name=prompt("Game name","My RODEV Experience");if(name===null)return;
+ const description=prompt("Short game description","Created with RODEV Studio")||"";
+ const cleanName=name.trim().slice(0,60);if(!cleanName){notify("Enter a game name.");return}
+ try{
+  const {data:projects,error:projectError}=await supabase.from("studio_projects").select("id,project_data").eq("owner_id",currentProfile.id).order("updated_at",{ascending:false}).limit(1);
+  if(projectError)throw projectError;
+  if(!projects?.length){notify("Save your Studio project to the cloud before publishing.");return}
+  const {data:game,error}=await supabase.from("games").insert({creator_id:currentProfile.id,name:cleanName,description:description.slice(0,2000),visibility:"public",status:"published"}).select("id").single();
+  if(error)throw error;
+  const {error:updateError}=await supabase.from("studio_projects").update({published_game_id:game.id}).eq("id",projects[0].id);if(updateError)throw updateError;
+  await renderCreations();notify("Public game listing created! The playable game runtime is a separate next step.");
+ }catch(err){notify("Publish failed: "+err.message)}
+};
+$("p-creations .empty")?.insertAdjacentHTML("afterend","<div id='rodevCreationsList'></div>");
+const editorTools=document.querySelector("#p-studio .tools");
+if(editorTools){const cloud=document.createElement("button");cloud.id="rodevCloudSave";cloud.textContent="☁ Save to cloud";cloud.onclick=()=>{const raw=localStorage.getItem("rodev-draft");let draft=[];try{draft=JSON.parse(raw||"[]")}catch{}window.rodevCloudSave(draft)};editorTools.insertBefore(cloud,editorTools.firstChild);
+ const cloudLoad=document.createElement("button");cloudLoad.textContent="☁ Load cloud";cloudLoad.onclick=()=>window.rodevCloudLoad();editorTools.insertBefore(cloudLoad,editorTools.firstChild)}
+const {data:{session:initialSession}}=await supabase.auth.getSession();
+await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
+supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>refreshAccount().catch(err=>console.warn(err)),0)});
+</script>
+</body></html>
