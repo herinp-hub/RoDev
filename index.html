@@ -184,7 +184,7 @@ $("rodevAddFriend").onclick=async()=>{
  if(!currentProfile){openAuth();return}
  const username=prompt("Enter their exact RODEV username");if(username===null)return;
  if(!/^[A-Za-z0-9_]{3,20}$/.test(username.trim())){notify("Enter a valid username.");return}
- const {data:person,error:findError}=await supabase.from("profiles").select("id,username").ilike("username",username.trim().replace(/[%_]/g,"\\ilike("username",username.trim())")).maybeSingle();
+ const {data:person,error:findError}=await supabase.from("profiles").select("id,username").eq("username",username.trim()).maybeSingle();
  if(findError||!person){notify("Couldn't find that username.");return}
  if(person.id===currentProfile.id){notify("You can't add yourself.");return}
  const {error}=await supabase.from("friendships").insert({requester_id:currentProfile.id,addressee_id:person.id,status:"pending"});
@@ -194,7 +194,7 @@ $("rodevAddFriend").onclick=async()=>{
 $("rodevNewMessage").onclick=async()=>{
  if(!currentProfile){openAuth();return}
  const username=prompt("Enter the username of an accepted friend");if(username===null)return;
- const {data:person,error}=await supabase.from("profiles").select("id,username,display_name").ilike("username",username.trim().replace(/[%_]/g,"\\ilike("username",username.trim()).maybeSingle()")).maybeSingle();
+ const {data:person,error}=await supabase.from("profiles").select("id,username,display_name").eq("username",username.trim()).maybeSingle()")).maybeSingle();
  if(error||!person){notify("Couldn't find that user.");return}
  const {data:friend}=await supabase.from("friendships").select("id").eq("status","accepted").or("and(requester_id.eq."+currentProfile.id+",addressee_id.eq."+person.id+"),and(requester_id.eq."+person.id+",addressee_id.eq."+currentProfile.id+")").maybeSingle();
  if(!friend){notify("You can only message accepted friends.");return}await messageFriend(person);
