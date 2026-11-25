@@ -440,7 +440,7 @@ async function launchGame(game){
   const up=e=>{const k=e.key.toLowerCase();activeGameKeys[k===" "?"space":k]=false};
   window.addEventListener("keydown",move,{passive:false});window.addEventListener("keyup",up);
   const touch=$("rodevTouchPad").querySelectorAll("button");touch.forEach(b=>{const key=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();activeGameKeys[key]=true};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>activeGameKeys[key]=false});
-  const jump=()=>{if(onGround&&!finished){vy=.34;onGround=false}};const clock=new THREE.Clock();
+  const jump=()=>{if(onGround&&!finished){vy=10.8;onGround=false}};const clock=new THREE.Clock();
   const loop=()=>{activeGameFrame=requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04),speed=9*dt;const forward=activeGameKeys.w||activeGameKeys.arrowup,back=activeGameKeys.s||activeGameKeys.arrowdown,left=activeGameKeys.a||activeGameKeys.arrowleft,right=activeGameKeys.d||activeGameKeys.arrowright;
    if(!finished){player.position.x+=(right?speed:0)-(left?speed:0);player.position.z+=(back?speed:0)-(forward?speed:0);player.position.x=Math.max(-7,Math.min(7,player.position.x));if((activeGameKeys.space||activeGameKeys[" "])&&onGround)jump();
     const previousBottom=player.position.y-.02;vy-=19*dt;player.position.y+=vy*dt;onGround=false;
