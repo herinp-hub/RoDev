@@ -182,7 +182,7 @@ async function edgeAuth(action,username,password){
  return payload;
 }
 // Use the SAME Supabase client for username login, profile loading, and logout.
-let authFlowInProgress=false;
+let authFlowInProgress=false, authRevision=0;
 $("rodevAuthForm").addEventListener("submit",async event=>{
  event.preventDefault();event.stopPropagation();
  const username=$("rodevUsername").value.trim(),password=$("rodevPassword").value,submit=$("rodevAuthSubmit");
@@ -190,6 +190,7 @@ $("rodevAuthForm").addEventListener("submit",async event=>{
  if(password.length<8||password.length>128){authError.textContent="Password must be at least 8 characters.";return}
  submit.disabled=true;authError.textContent="";submit.textContent=authMode==="signup"?"Creating account…":"Signing in…";
  authFlowInProgress=true;
+ authRevision++;
  try{
   // Remove any previously signed-in identity before applying the account just authenticated.
   const {error:clearError}=await supabase.auth.signOut({scope:"local"});
@@ -210,9 +211,12 @@ $("rodevAuthForm").addEventListener("submit",async event=>{
  finally{authFlowInProgress=false;submit.disabled=false;submit.textContent=authMode==="signup"?"Create account":"Sign in"}
 });
 async function refreshAccount(){
+ const refreshRevision=authRevision;
  const {data:{session}}=await supabase.auth.getSession();
+ if(refreshRevision!==authRevision)return;
  if(!session){currentProfile=null;accountBtn.textContent="Sign in";signoutBtn.style.display="none";if($("rodevSidebarSignOutWrap"))$("rodevSidebarSignOutWrap").style.display="block";if($("rodevProfileSignOut"))$("rodevProfileSignOut").style.display="none";document.querySelector(".sidefoot b").textContent="Guest";document.querySelector(".sidefoot small").textContent="Not signed in";await renderFriends();await renderMessages();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();return}
  const {data,error}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+ if(refreshRevision!==authRevision)return;
  if(error)throw error;
  currentProfile=data;const label=data?.display_name||data?.username||session.user.user_metadata?.username||"RODEV member";
  accountBtn.textContent=label;signoutBtn.style.display="inline-block";if($("rodevSidebarSignOutWrap"))$("rodevSidebarSignOutWrap").style.display="block";if($("rodevProfileSignOut"))$("rodevProfileSignOut").style.display="inline-block";document.querySelector(".sidefoot b").textContent=label;document.querySelector(".sidefoot small").textContent="RODEV member";
@@ -538,7 +542,7 @@ if(FORCE_SIGNIN_ON_OPEN){
 const {data:{session:initialSession}}=await supabase.auth.getSession();
 paintAvatar();await renderPublishedGames();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
 if(FORCE_SIGNIN_ON_OPEN)openAuth("signup");
-supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>{if(!authFlowInProgress)refreshAccount().catch(err=>console.warn(err))},0)});
+supabase.auth.onAuthStateChange((_event)=>{if(authFlowInProgress)return;setTimeout(()=>refreshAccount().catch(err=>console.warn('RODEV auth refresh:',err)),0)});
 </script>
 
 
