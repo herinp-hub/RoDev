@@ -181,6 +181,21 @@ async function edgeAuth(action,username,password){
  if(payload.session){const {error}=await supabase.auth.setSession({access_token:payload.session.access_token,refresh_token:payload.session.refresh_token});if(error)throw error}
  return payload;
 }
+// Use the SAME Supabase client for username login, profile loading, and logout.
+$("rodevAuthForm").addEventListener("submit",async event=>{
+ event.preventDefault();event.stopPropagation();
+ const username=$("rodevUsername").value.trim(),password=$("rodevPassword").value,submit=$("rodevAuthSubmit");
+ if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){authError.textContent="Username must be 3–20 letters, numbers, or underscores.";return}
+ if(password.length<8||password.length>128){authError.textContent="Password must be at least 8 characters.";return}
+ submit.disabled=true;authError.textContent="";submit.textContent=authMode==="signup"?"Creating account…":"Signing in…";
+ try{
+  const result=await edgeAuth(authMode,username,password);
+  if(result.created&&!result.session){setMode("signin");$("rodevUsername").value=username;authError.textContent=result.message||"Account created. Please sign in.";return}
+  if(!result.session)throw new Error("The account service did not return a session. Please try again.");
+  await refreshAccount();closeAuth();notify("Signed in as "+(currentProfile?.username||username)+".");
+ }catch(error){authError.textContent=error?.message||"Sign-in failed. Please try again."}
+ finally{submit.disabled=false;submit.textContent=authMode==="signup"?"Create account":"Sign in"}
+});
 async function refreshAccount(){
  const {data:{session}}=await supabase.auth.getSession();
  if(!session){currentProfile=null;accountBtn.textContent="Sign in";signoutBtn.style.display="none";if($("rodevSidebarSignOutWrap"))$("rodevSidebarSignOutWrap").style.display="block";if($("rodevProfileSignOut"))$("rodevProfileSignOut").style.display="none";document.querySelector(".sidefoot b").textContent="Guest";document.querySelector(".sidefoot small").textContent="Not signed in";await renderFriends();await renderMessages();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();return}
@@ -208,9 +223,10 @@ window.rodevSignOut=async()=>{
  buttons.forEach(b=>{b.disabled=true;b.textContent="Signing out…"});
  try{
   // Try the official local sign-out first, but always clear this app's persisted browser session.
-  try{await Promise.race([supabase.auth.signOut({scope:"local"}),new Promise(resolve=>setTimeout(resolve,2500))]);}catch(err){console.warn("RODEV local sign-out request failed; clearing local session:",err?.message||err)}
-  try{localStorage.removeItem("sb-tebuyfbzpjuhvnefdasu-auth-token");}catch(err){console.warn("RODEV local auth storage could not be cleared:",err)}
-  try{sessionStorage.clear();}catch{}
+  const {error}=await supabase.auth.signOut({scope:"local"});
+  if(error)throw error;
+  try{for(const key of Object.keys(localStorage)){if(key.startsWith("sb-tebuyfbzpjuhvnefdasu-"))localStorage.removeItem(key)}}catch(err){console.warn("RODEV local auth storage cleanup:",err?.message||err)}
+  try{sessionStorage.clear()}catch{}
   currentProfile=null;currentProjectId=null;
   window.location.replace(window.location.pathname+"?signedout="+Date.now());
  }catch(err){
@@ -511,21 +527,6 @@ paintAvatar();await renderPublishedGames();await renderPlusStatus();await render
 if(FORCE_SIGNIN_ON_OPEN)openAuth("signup");
 supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>refreshAccount().catch(err=>console.warn(err)),0)});
 </script>
-<script type="module">
-import { createClient as createAuthClient } from "https://esm.sh/@supabase/supabase-js@2.119.2";
-const authUrl="https://tebuyfbzpjuhvnefdasu.supabase.co";
-const authKey="sb_publishable_RERAop6SNwxNP-w0fu4Uiw_Al-bao6M";
-const authApi=authUrl+"/functions/v1/username-auth";
-const authSupabase=createAuthClient(authUrl,authKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-const form=document.getElementById("rodevAuthForm");
-const err=document.getElementById("rodevAuthError");
-const modeButtons={signin:document.getElementById("rodevSignInTab"),signup:document.getElementById("rodevSignUpTab")};
-let mode=new URLSearchParams(location.search).get("utm_source")==="chatgpt.com"?"signup":"signin";
-function switchMode(next){mode=next;modeButtons.signin.classList.toggle("active",mode==="signin");modeButtons.signup.classList.toggle("active",mode==="signup");document.getElementById("rodevAuthTitle").textContent=mode==="signup"?"Our journey starts now":"Welcome back";document.getElementById("rodevAuthDesc").textContent=mode==="signup"?"Create your account below and start building your world.":"Log in below to continue your RODEV journey.";document.getElementById("rodevAuthSubmit").textContent=mode==="signup"?"Create account":"Log in";document.getElementById("rodevPassword").autocomplete=mode==="signup"?"new-password":"current-password";err.textContent="";}
-modeButtons.signin.addEventListener("click",()=>switchMode("signin"));
-modeButtons.signup.addEventListener("click",()=>switchMode("signup"));
-form.addEventListener("submit",async event=>{event.preventDefault();event.stopImmediatePropagation();err.textContent="";const username=document.getElementById("rodevUsername").value.trim();const password=document.getElementById("rodevPassword").value;const submit=document.getElementById("rodevAuthSubmit");if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){err.textContent="Username must be 3–20 letters, numbers, or underscores.";return;}if(password.length<8||password.length>128){err.textContent="Password must be at least 8 characters.";return;}submit.disabled=true;submit.textContent=mode==="signup"?"Creating account…":"Logging in…";try{const response=await fetch(authApi,{method:"POST",headers:{"Content-Type":"application/json","apikey":authKey,"Authorization":"Bearer "+authKey},body:JSON.stringify({action:mode,username,password})});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"Account request failed ("+response.status+").");if(payload.created&&!payload.session){switchMode("signin");document.getElementById("rodevUsername").value=username;err.textContent=payload.message||"Account created. Please log in.";return;}if(!payload.session)throw new Error("The account service did not return a login session. Please try again.");const {error}=await authSupabase.auth.setSession({access_token:payload.session.access_token,refresh_token:payload.session.refresh_token});if(error)throw error;location.replace(location.pathname+"?welcome=1");}catch(error){err.textContent=error?.message||"Something went wrong. Please try again.";}finally{submit.disabled=false;submit.textContent=mode==="signup"?"Create account":"Log in";}});
-switchMode(mode);
-</script>
+
 
 </body></html>
