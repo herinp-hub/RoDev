@@ -182,12 +182,14 @@ async function edgeAuth(action,username,password){
  return payload;
 }
 // Use the SAME Supabase client for username login, profile loading, and logout.
+let authFlowInProgress=false;
 $("rodevAuthForm").addEventListener("submit",async event=>{
  event.preventDefault();event.stopPropagation();
  const username=$("rodevUsername").value.trim(),password=$("rodevPassword").value,submit=$("rodevAuthSubmit");
  if(!/^[A-Za-z0-9_]{3,20}$/.test(username)){authError.textContent="Username must be 3–20 letters, numbers, or underscores.";return}
  if(password.length<8||password.length>128){authError.textContent="Password must be at least 8 characters.";return}
  submit.disabled=true;authError.textContent="";submit.textContent=authMode==="signup"?"Creating account…":"Signing in…";
+ authFlowInProgress=true;
  try{
   // Remove any previously signed-in identity before applying the account just authenticated.
   const {error:clearError}=await supabase.auth.signOut({scope:"local"});
@@ -205,7 +207,7 @@ $("rodevAuthForm").addEventListener("submit",async event=>{
   }
   closeAuth();notify("Signed in as "+currentProfile.username+".");
  }catch(error){authError.textContent=error?.message||"Sign-in failed. Please try again."}
- finally{submit.disabled=false;submit.textContent=authMode==="signup"?"Create account":"Sign in"}
+ finally{authFlowInProgress=false;submit.disabled=false;submit.textContent=authMode==="signup"?"Create account":"Sign in"}
 });
 async function refreshAccount(){
  const {data:{session}}=await supabase.auth.getSession();
@@ -536,7 +538,7 @@ if(FORCE_SIGNIN_ON_OPEN){
 const {data:{session:initialSession}}=await supabase.auth.getSession();
 paintAvatar();await renderPublishedGames();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();await refreshAccount().catch(err=>console.warn("RODEV account refresh:",err.message));
 if(FORCE_SIGNIN_ON_OPEN)openAuth("signup");
-supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>refreshAccount().catch(err=>console.warn(err)),0)});
+supabase.auth.onAuthStateChange((_event)=>{setTimeout(()=>{if(!authFlowInProgress)refreshAccount().catch(err=>console.warn(err))},0)});
 </script>
 
 
