@@ -226,7 +226,7 @@ async function refreshAccount(){
  const refreshRevision=authRevision;
  const {data:{session}}=await supabase.auth.getSession();
  if(refreshRevision!==authRevision)return;
- if(!session){currentProfile=null;accountBtn.textContent="Sign in";signoutBtn.style.display="none";if($("rodevSidebarSignOutWrap"))$("rodevSidebarSignOutWrap").style.display="block";if($("rodevProfileSignOut"))$("rodevProfileSignOut").style.display="none";document.querySelector(".sidefoot b").textContent="Sign in required";document.querySelector(".sidefoot small").textContent="Account access only";openAuth("signin");await renderFriends();await renderMessages();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();return}
+ if(!session){currentProfile=null;accountBtn.textContent="Sign in";signoutBtn.style.display="none";if($("rodevSidebarSignOutWrap"))$("rodevSidebarSignOutWrap").style.display="block";if($("rodevProfileSignOut"))$("rodevProfileSignOut").style.display="none";document.querySelector(".sidefoot b").textContent="Sign in required";document.querySelector(".sidefoot small").textContent="Account access only";const signedOutTitle=document.querySelector("#p-profile .profile h2");if(signedOutTitle)signedOutTitle.textContent="Sign in required";const signedOutDesc=document.querySelector("#p-profile .profile p");if(signedOutDesc)signedOutDesc.textContent="You are not signed in. Sign in or create an account to access your creator profile.";openAuth("signin");await renderFriends();await renderMessages();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();return}
  const {data,error}=await supabase.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
  if(refreshRevision!==authRevision)return;
  if(error)throw error;
@@ -234,6 +234,8 @@ async function refreshAccount(){
  accountBtn.textContent=label;signoutBtn.style.display="inline-block";if($("rodevSidebarSignOutWrap"))$("rodevSidebarSignOutWrap").style.display="block";if($("rodevProfileSignOut"))$("rodevProfileSignOut").style.display="inline-block";document.querySelector(".sidefoot b").textContent=label;document.querySelector(".sidefoot small").textContent="RODEV member";
  const avatar=document.querySelector(".sidefoot .userpic");if(avatar)avatar.textContent=(label[0]||"R").toUpperCase();
  const profileTitle=document.querySelector("#p-profile .profile h2");if(profileTitle)profileTitle.textContent=label;
+ const profileDesc=document.querySelector("#p-profile .profile p");if(profileDesc)profileDesc.textContent="Your RODEV creator account is signed in and ready.";
+ const profileAvatar=document.querySelector("#p-profile .profile .bigavatar");if(profileAvatar)profileAvatar.textContent=(label[0]||"R").toUpperCase();
  const avatarTitle=document.querySelector("#p-avatar .panel h2");if(avatarTitle)avatarTitle.textContent=label;
  await renderCreations();await renderFriends();await renderMessages();await renderPublishedGames();await renderPlusStatus();await renderCommunities();await renderInventory();await renderAdmin();selectedAvatarEmoji=data.avatar_data?.emoji||"🧑‍🚀";if($("rodevAvatarBg"))$("rodevAvatarBg").value=data.avatar_data?.background||"#eaf0ff";paintAvatar();
 }
