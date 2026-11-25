@@ -195,9 +195,21 @@ $("rodevAuthForm").addEventListener("submit",async event=>{
   // Remove any previously signed-in identity before applying the account just authenticated.
   const {error:clearError}=await supabase.auth.signOut({scope:"local"});
   if(clearError)throw clearError;
-  const result=await edgeAuth(authMode,username,password);
-  if(result.created&&!result.session){setMode("signin");$("rodevUsername").value=username;authError.textContent=result.message||"Account created. Please sign in.";return}
-  if(!result.session)throw new Error("The account service did not return a session. Please try again.");
+  let accountWasCreated=false;
+  let result=await edgeAuth(authMode,username,password);
+  if(authMode==="signup"&&result.created){
+   accountWasCreated=true;
+   if(!result.session){
+    // A newly created account may be committed even if the first automatic sign-in
+    // response is interrupted. Retry through the normal sign-in path immediately.
+    authError.textContent="Account created. Finishing sign-in…";
+    result=await edgeAuth("signin",username,password);
+   }
+  }
+  if(!result.session){
+   if(accountWasCreated)throw new Error("Your account was created, but RODEV couldn't finish signing you in. Choose Sign in and use the same username and password.");
+   throw new Error("The account service did not return a session. Please try again.");
+  }
   const {data:{session:confirmedSession},error:sessionError}=await supabase.auth.getSession();
   if(sessionError)throw sessionError;
   if(!confirmedSession||!result.user?.id||confirmedSession.user.id!==result.user.id){await supabase.auth.signOut({scope:"local"});throw new Error("The account session did not match the username you entered. Please try again.");}
